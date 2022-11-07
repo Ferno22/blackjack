@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blackjack Game</title>
+</head>
+<body>
+<h1>Welcome to the Blackjack Game</h1>
+<p>4x bet value on 21, 2x bet value between 15 and 21, 1x bet value between 10 and 15, 0.5x bet value between 5 and 10</p>
+<div id="scores"></div>
+<div id="cards"></div>
+<div id="playerCards"></div>
+<div id="houseCards"></div>
+<div id="money"></div>
+<div id="bet"></div>
+<div id="value"></div>
+<div id="mssg"></div>
+<button onclick="round()">Start Round</button>
+<button onclick="playerDraw()">Draw</button>
+<button onclick="endRound()">End Round</button>
+<script>
+    let cardsOutOfDeck = 0
+    let house = {cards: [], score: 0}
+    let player = {cards: [], score: 0, money: 500, bet: 0}
+    let deck = {
+        cards: [
+            {name: 'A', suit: 'Hearts', value: 11},
+            {name: '2', suit: 'Hearts', value: 2},
+            {name: '3', suit: 'Hearts', value: 3},
+            {name: '4', suit: 'Hearts', value: 4},
+            {name: '5', suit: 'Hearts', value: 5},
+            {name: '6', suit: 'Hearts', value: 6},
+            {name: '7', suit: 'Hearts', value: 7},
+            {name: '8', suit: 'Hearts', value: 8},
+            {name: '9', suit: 'Hearts', value: 9},
+            {name: '10', suit: 'Hearts', value: 10},
+            {name: 'J', suit: 'Hearts', value: 10},
+            {name: 'Q', suit: 'Hearts', value: 10},
+            {name: 'K', suit: 'Hearts', value: 10},
+            {name: 'A', suit: 'Diamonds', value: 11},
+            {name: '2', suit: 'Diamonds', value: 2},
+            {name: '3', suit: 'Diamonds', value: 3},
+            {name: '4', suit: 'Diamonds', value: 4},
+            {name: '5', suit: 'Diamonds', value: 5},
+            {name: '6', suit: 'Diamonds', value: 6},
+            {name: '7', suit: 'Diamonds', value: 7},
+            {name: '8', suit: 'Diamonds', value: 8},
+            {name: '9', suit: 'Diamonds', value: 9},
+            {name: '10', suit: 'Diamonds', value: 10},
+            {name: 'J', suit: 'Diamonds', value: 10},
+            {name: 'Q', suit: 'Diamonds', value: 10},
+            {name: 'K', suit: 'Diamonds', value: 10},
+            {name: 'A', suit: 'Clubs', value: 11},
+            {name: '2', suit: 'Clubs', value: 2},
+            {name: '3', suit: 'Clubs', value: 3},
+            {name: '4', suit: 'Clubs', value: 4},
+            {name: '5', suit: 'Clubs', value: 5},
+            {name: '6', suit: 'Clubs', value: 6},
+            {name: '7', suit: 'Clubs', value: 7},
+            {name: '8', suit: 'Clubs', value: 8},
+            {name: '9', suit: 'Clubs', value: 9},
+            {name: '10', suit: 'Clubs', value: 10},
+            {name: 'J', suit: 'Clubs', value: 10},
+            {name: 'Q', suit: 'Clubs', value: 10},
+            {name: 'K', suit: 'Clubs', value: 10},
+            {name: 'A', suit: 'Spades', value: 11},
+            {name: '2', suit: 'Spades', value: 2},
+            {name: '3', suit: 'Spades', value: 3},
+            {name: '4', suit: 'Spades', value: 4},
+            {name: '5', suit: 'Spades', value: 5},
+            {name: '6', suit: 'Spades', value: 6},
+            {name: '7', suit: 'Spades', value: 7},
+            {name: '8', suit: 'Spades', value: 8},
+            {name: '9', suit: 'Spades', value: 9},
+            {name: '10', suit: 'Spades', value: 10},
+            {name: 'J', suit: 'Spades', value: 10},
+            {name: 'Q', suit: 'Spades', value: 10},
+            {name: 'K', suit: 'Spades', value: 10},
+        ],
+        shuffle: function () {
+            for (let i = this.cards.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+            }
+        },
+        draw: function () {
+            return this.cards[cardsOutOfDeck++]
+        }
+    }
+    deck.shuffle()
+    function displayPlayer() {
+        document.getElementById('playerCards').innerHTML = '<p>Player Cards:</p>'
+        for (let i = 0; i < player.cards.length; i++) {
+            document.getElementById('playerCards').innerHTML += player.cards[i].name + ' of ' + player.cards[i].suit + '<br>'
+        }
+    }
+    function displayHouseHidden(){
+        document.getElementById('houseCards').innerHTML = '<p>House Cards:</p>'
+        for (let i = 0; i < house.cards.length; i++) {
+            document.getElementById('houseCards').innerHTML += 'Card <br>'
+        }
+    }
+    function displayHouse(){
+        document.getElementById('houseCards').innerHTML = '<p>House Cards:</p>'
+        for (let i = 0; i < house.cards.length; i++) {
+            document.getElementById('houseCards').innerHTML += house.cards[i].name + ' of ' + house.cards[i].suit + '<br>'
+        }
+    }
+    document.getElementById("scores").innerHTML += '<p>Player Score: ' + player.score + ' House Score: ' + house.score + '</p>'
+    document.getElementById("cards").innerHTML += '<P>Cards in Deck: ' + (deck.cards.length - cardsOutOfDeck) + '</p>'
+    displayPlayer()
+    displayHouseHidden()
+    document.getElementById("money").innerHTML += "<p>Money: " + player.money + "</p>"
+    document.getElementById("bet").innerHTML += "<p>Bet: " + player.bet + "</p>"
+    document.getElementById("mssg").innerHTML += "<p>The game ends once all the cards of the deck have been used or you run out of money. Press the button to start the round</p>"
+    function getValue(cards){
+        let value = 0
+        let foundAce = false
+        let aceOne = false
+        for (let i = 0; i < cards.length; i++) {
+            value += cards[i].value
+            if (cards[i].name === 'A') {
+                foundAce = true
+            } 
+            if (value > 21 && foundAce && !aceOne) {
+                value -= 10
+                aceOne = true
+            } 
+        }
+        return value
+    }
+    function betResult(){
+        if (getValue(player.cards) > 21 && getValue(house.cards) > 21) {
+            player.money += 1*player.bet
+            document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+        } else if (getValue(player.cards) < 21 && getValue(house.cards) < 21 && getValue(player.cards) > getValue(house.cards)) {
+            if (getValue(player.cards) === 21){
+                player.money += 4*player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            }
+            else if (getValue(player.cards) >= 15 && getValue(player.cards) < 21){
+                player.money += 2*player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            }
+            else if (getValue(player.cards) >= 10 && getValue(player.cards) < 15){
+                player.money += 1*player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            }
+            else if (getValue(player.cards) >= 5 && getValue(player.cards) < 10){
+                player.money += 0.5*player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            }
+        } else if (getValue(player.cards) === getValue(house.cards)){
+            player.money += 1*player.bet
+            document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+        } else if (getValue(house.cards) > 21) {
+            if (getValue(player.cards) === 21){
+                player.money += 4*player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            }
+            else if (getValue(player.cards) >= 15 && getValue(player.cards) < 21){
+                player.money += 2*player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            }
+            else if (getValue(player.cards) >= 10 && getValue(player.cards) < 15){
+                player.money += 1*player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            }
+            else if (getValue(player.cards) >= 5 && getValue(player.cards) < 10){
+                player.money += 0.5*player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            }
+        }
+    }
+    function endGame() {
+        if (cardsOutOfDeck < 52) {
+            if (player.money <= 0) {
+                alert("You have no money left. Game over.")
+                deck.shuffle()
+                player.cards = []
+                house.cards = []
+                cardsOutOfDeck = 0
+                player.money = 500
+                player.score = 0
+                player.bet = 0
+                house.score = 0
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+                document.getElementById("scores").innerHTML = '<p>Player Score: ' + player.score + ' House Score: ' + house.score + '</p>'
+                document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                document.getElementById("mssg").innerHTML = "<p>The game ends once all the cards of the deck have been used or you run out of money. Press the button to start the round</p>"
+                displayPlayer()
+                displayHouseHidden()
+                document.getElementById("cards").innerHTML = '<p>Cards in Deck: ' + (deck.cards.length - cardsOutOfDeck) + '</p>'
+                document.getElementById("cards").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+            }
+        } else if (cardsOutOfDeck >= 52) {
+            if (player.score > house.score) {
+                alert("Congratulations, you won the game :)")
+            }
+            else if (house.score < player.score) {
+                alert("You lost, maybe try again?")
+            }
+            else if (house.score === player.score) {
+                alert("It's a tie, you are as good as a machine")
+            }
+            deck.shuffle()
+            player.cards = []
+            house.cards = []
+            cardsOutOfDeck = 0
+            player.money = 500
+            player.bet = 0
+            player.score = 0
+            house.score = 0
+            document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+            document.getElementById("scores").innerHTML = '<p>Player Score: ' + player.score + ' House Score: ' + house.score + "</p>"
+            document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+            document.getElementById("mssg").innerHTML = "<p>The game ends once all the cards of the deck have been used or you run out of money. Press the button to start the round</p>"
+            displayPlayer()
+            displayHouseHidden()
+            document.getElementById("cards").innerHTML = 'Cards in Deck: ' + (deck.cards.length - cardsOutOfDeck)
+            document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+        }
+    }
+    function draw(entity){
+        if (cardsOutOfDeck > 52) {
+            alert("The deck is out of cards. Compiling results...")
+            endGame()
+        } else {
+            if (entity.cards.length < 5) {
+                entity.cards.push(deck.draw())
+                document.getElementById("cards").innerHTML = '<p>Cards in Deck: ' + (deck.cards.length - cardsOutOfDeck) + "</p>"
+                if (entity === player){
+                    displayPlayer()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + "</p>"
+                } else {
+                    displayHouseHidden()
+                }
+            } else {
+                alert("You can't draw more than 5 cards")
+                endRound()
+            }
+        }
+    }
+    function round() {
+        if (player.cards.length != 0 && house.cards.length != 0) {
+            alert("The round has already started.")
+        } else {
+            player.bet = 0
+            document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+            player.bet = prompt("How much do you want to bet?")
+            if (player.bet > player.money){
+                alert("You don't have enough money to bet that much")
+                round()
+            } 
+            else if (player.bet <= 0) {
+                alert("You can't bet that little")
+                round()            
+            } 
+            else if (player.bet === null) {
+                alert("You have to bet something")
+                round()
+            } 
+            else if (isNaN(player.bet)) {
+                alert("You must bet a number")
+                round()
+            } else {
+                player.money -= player.bet
+                document.getElementById("money").innerHTML = "<p>Money: " + player.money + "</p>"
+                document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                if (cardsOutOfDeck + 4 > 52) {
+                    alert("The deck is out of cards. Compiling results...")
+                    cardsOutOfDeck += 4
+                    endGame()
+                } else {
+                    draw(player)
+                    draw(player)
+                    draw(house)
+                    draw(house)
+                    displayPlayer()
+                    displayHouseHidden()
+                    document.getElementById("mssg").innerHTML = "<p>Press the button to draw a card or to end the round</p>"
+                }
+            }
+        }
+    }
+    function playerDraw() {
+        if (player.cards.length === 0 || house.cards.length === 0 || player.cards.length === 5 || house.cards.length === 5) {
+            alert("Start the round first")
+        } else {
+            draw(player)
+            displayPlayer()
+            houseDraw()
+        }
+    }
+    function houseDraw() {
+        let Ace = false
+        for (let i = 0; i < house.cards.length; i++) {
+            if (house.cards[i].name === 'A') {
+                Ace = true
+            }
+            if (getValue(house.cards) < 17) {
+                draw(house)
+                displayHouseHidden()
+            }
+            if (getValue(house.cards) >= 17 && getValue(house.cards) < 21 && Ace) {
+                draw(house)
+                displayHouseHidden()
+            }
+        }
+    }
+    function endRound() {
+        if (player.cards.length === 0) {
+            alert("You can't do that now")
+        } else {
+            while (getValue(house.cards) < 17 && house.cards.length < 5) {
+                houseDraw()
+                displayHouseHidden()
+            }
+            if (player.cards.length === 5 || house.cards.length === 5) {
+                if (getValue(player.cards) <= 21 || getValue(house.cards) <= 21) {
+                    displayHouse()
+                    betResult()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    if (player.cards.length === 5 && getValue(player.cards) <= 21) {
+                        player.score += 1
+                        document.getElementById("mssg").innerHTML = "<p>You got 5 cards and didn't go over 21 points, nice :)</p>"
+                    } else if (house.cards.length === 5 && getValue(house.cards) <= 21) {
+                        house.score += 1
+                        document.getElementById("mssg").innerHTML = "<p>The house got 5 cards and didn't go over 21 points, most impressive</p>"
+                    }
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    endGame()
+                } else if (getValue(player.cards) > 21 && getValue(house.cards) <= 21) {
+                    displayHouse()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    house.score += 1
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    document.getElementById("mssg").innerHTML = "<p>You went over 21, you lost the round. Press the button to start the next round</p>"
+                    endGame()
+                } else if (getValue(house.cards) > 21 && getValue(player.cards) <= 21) {
+                    displayHouse()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    betResult()
+                    player.score += 1
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    document.getElementById("mssg").innerHTML = "<p>The house went over 21, you won the round. Press the button to start the next round</p>"
+                    endGame()
+                } else {
+                    displayHouse()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    betResult()
+                    player.score += 1
+                    house.score += 1
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    document.getElementById("mssg").innerHTML = "<p>You both went over 21, it's a tie. Press the button to start the next round</p>"
+                    endGame()
+                } 
+            } else {
+                if (getValue(player.cards) > 21 && getValue(house.cards) < 21){
+                    displayHouse()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    house.score += 1
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    document.getElementById("mssg").innerHTML = "<p>You went over 21, you lost the round. Press the button to start the next round</p>"
+                    endGame()
+                }
+                else if (getValue(house.cards) > 21 && getValue(player.cards) < 21){
+                    displayHouse()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    betResult()
+                    player.score += 1
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    document.getElementById("mssg").innerHTML = "<p>The house went over 21, you won the round. Press the button to start the next round</p>"
+                    endGame()
+                }
+                else if (getValue(player.cards) > 21 && getValue(house.cards) > 21){
+                    displayHouse()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    betResult()
+                    player.score += 1
+                    house.score += 1
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    document.getElementById("mssg").innerHTML = "<p>You both went over 21, it's a tie. Press the button to start the next round</p>"
+                    endGame()
+                }
+                else if (getValue(player.cards) === 21 && getValue(house.cards) != 21){
+                    displayHouse()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    betResult()
+                    player.score += 1
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    document.getElementById("mssg").innerHTML = "<p>You got 21, you won the round. Press the button to start the next round</p>"
+                    endGame()
+                }
+                else if (getValue(house.cards) === 21 && getValue(player.cards) != 21){
+                    displayHouse()
+                    document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                    house.score += 1
+                    document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                    player.cards = []
+                    house.cards = []
+                    player.bet = 0
+                    document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                    document.getElementById("mssg").innerHTML = "<p>The house got 21, you lost the round. Press the button to start the next round</p>"
+                    endGame()
+                }
+                else if (getValue(player.cards) < 21 && getValue(house.cards) < 21) {
+                    if (getValue(player.cards) === getValue(house.cards)){
+                        displayHouse()
+                        document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                        betResult()
+                        player.score += 1
+                        house.score += 1
+                        document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                        player.cards = []
+                        house.cards = []
+                        player.bet = 0
+                        document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                        document.getElementById("mssg").innerHTML = "<p>It's a tie. Press the button to start the next round</p>"
+                        endGame()
+                    }
+                    else if (getValue(player.cards) > getValue(house.cards)){
+                        displayHouse()
+                        document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                        betResult()
+                        player.score += 1
+                        document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                        player.cards = []
+                        house.cards = []
+                        player.bet = 0
+                        document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                        document.getElementById("mssg").innerHTML = "<p>You were closer to 21, you won the round. Press the button to start the next round</p>"
+                        endGame()
+                    }
+                    else if (getValue(player.cards) < getValue(house.cards)){
+                        displayHouse()
+                        document.getElementById("value").innerHTML = "<p>Player: " + getValue(player.cards) + " House: " + getValue(house.cards) + "</p>"
+                        house.score += 1
+                        document.getElementById("scores").innerHTML = 'Player Score: ' + player.score + ' House Score: ' + house.score
+                        player.cards = []
+                        house.cards = []
+                        player.bet = 0
+                        document.getElementById("bet").innerHTML = "<p>Bet: " + player.bet + "</p>"
+                        document.getElementById("mssg").innerHTML = "<p>The house was closer to 21, you lost the round. Press the button to start the next round</p>"
+                        endGame()
+                    }
+                }
+            }
+        }
+    }
+</script>
+</body>
+</html>
